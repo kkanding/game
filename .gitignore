@@ -97,3 +97,23 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+Assets/NotoSansKR-Bold.ttf
+Assets/NotoSansKR-Thin.ttf
+Assets/NotoSansKR-Light.ttf
+Assets/NotoSansKR-Medium.ttf
+Assets/NotoSansKR-SemiBold.ttf
+Assets/NotoSansKR-Regular.ttf
+Assets/NotoSansKR-Bold.ttf.meta
+Assets/NotoSansKR-ExtraBold.ttf
+Assets/NotoSansKR-Thin.ttf.meta
+Assets/NotoSansKR-ExtraLight.ttf
+Assets/NotoSansKR-Light.ttf.meta
+Assets/NotoSansKR-Medium.ttf.meta
+Assets/NotoSansKR-Regular.ttf.meta
+Assets/NotoSansKR-SemiBold.ttf.meta
+Assets/NotoSansKR-ExtraBold.ttf.meta
+Assets/NotoSansKR-ExtraLight.ttf.meta
+Assets/TextMesh Pro/Resources/Fonts & Materials/NotoSansKR-Game SDF.asset
+Assets/TextMesh Pro/Resources/Fonts & Materials/NotoSansKR-Game SDF.asset.meta
+Assets/TextMesh Pro/Examples & Extras/Scenes/28 - HDRP Shader Example/Sky and Fog Volume Profile.asset
+Assets/TextMesh Pro/Examples & Extras/Scenes/28 - HDRP Shader Example/Sky and Fog Volume Profile.asset.meta
