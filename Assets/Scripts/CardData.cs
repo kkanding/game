@@ -1,6 +1,27 @@
 using UnityEngine;
 
 [System.Serializable]
+public enum CardEffect
+{
+    None,
+    DrawCard,
+    GainEnergy,
+    Poison,
+    Vulnerable,
+    Weak,
+    Strength,
+	SelfDamage
+}
+
+[System.Serializable]
+public enum CardType
+{
+    Attack,         // 공격
+    Skill,          // 스킬 (방어 등)
+    Power           // 파워
+}
+
+[System.Serializable]
 public class CardData
 {
     public string cardName;

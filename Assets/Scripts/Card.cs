@@ -1,150 +1,114 @@
 using UnityEngine;
 
 [System.Serializable]
-public enum CardType
+public enum CharacterType
 {
-    Attack,
-    Skill,
-    Power
-}
-
-// ← 특수 효과 enum 추가!
-[System.Serializable]
-public enum CardEffect
-{
-    None,           // 효과 없음
-    DrawCard,       // 카드 드로우
-    GainEnergy,     // 에너지 획득
-    SelfDamage,     // 자신에게 데미지
-    Poison,         // 독
-    Weak,           // 약화
-    Vulnerable,     // 취약
-    Strength        // 힘
+    Warrior,    // 전사
+    Mage,       // 마법사
+    Rogue       // 도적
 }
 
 public class Card : MonoBehaviour
 {
-    [Header("Card Data")]
-    public string cardName;
-    public CardType cardType;
-    public int cost;
-    public int value;
+    [Header("카드 데이터")]
+    public CardData cardData;
     
-    [TextArea]
-    public string description;
+    [Header("배율 기반 효과")]
+    public float damageMultiplier;
+    public float defenseMultiplier;
+    public int mentalRestoreAmount;
     
-    [Header("Visual")]
-    public Sprite cardImage;
+    // 기존 속성들
+    public string cardName
+    {
+        get => cardData?.cardName ?? "";
+        set { if (cardData != null) cardData.cardName = value; }
+    }
     
-    [Header("Character Info")]
-    public int characterIndex = 0;
+    public CardType cardType
+    {
+        get => cardData?.cardType ?? CardType.Attack;
+        set { if (cardData != null) cardData.cardType = value; }
+    }
     
-    [Header("Special Effects")]
-    public CardEffect specialEffect = CardEffect.None;
-    public int effectValue = 0; // 특수 효과 값
+    public int cost
+    {
+        get => cardData?.cost ?? 0;
+        set { if (cardData != null) cardData.cost = value; }
+    }
     
-	//CardData로부터 데이터 설정
+    public int value
+    {
+        get => cardData?.value ?? 0;
+        set { if (cardData != null) cardData.value = value; }
+    }
+    
+    public int characterIndex
+    {
+        get => cardData?.characterIndex ?? 0;
+        set { if (cardData != null) cardData.characterIndex = value; }
+    }
+    
+    public CardEffect specialEffect
+    {
+        get => cardData?.specialEffect ?? CardEffect.None;
+        set { if (cardData != null) cardData.specialEffect = value; }
+    }
+    
+    // ← effectValue 추가!
+    public int effectValue
+    {
+        get => cardData?.effectValue ?? 0;
+        set { if (cardData != null) cardData.effectValue = value; }
+    }
+    
+    public string description
+    {
+        get => cardData?.description ?? "";
+        set { if (cardData != null) cardData.description = value; }
+    }
+    
+    public Sprite cardImage
+    {
+        get => null;
+        set { }
+    }
+    
     public void SetFromCardData(CardData data)
     {
-        cardName = data.cardName;
-        cardType = data.cardType;
-        cost = data.cost;
-        value = data.value;
-        description = data.description;
-        characterIndex = data.characterIndex;
-        specialEffect = data.specialEffect; // ← 특수 효과 복사!
-        effectValue = data.effectValue;
-    }
-	
-    public virtual void PlayCard()
-    {
-        if (!BattleManager.Instance.UseEnergy(cost))
-            return;
+        cardData = data;
         
-        Debug.Log($"{cardName} 카드 사용!");
-        
-        // 기본 효과
-        switch (cardType)
+        switch (data.cardType)
         {
             case CardType.Attack:
-                if (BattleManager.Instance.enemy != null)
-                {
-                    BattleManager.Instance.enemy.TakeDamage(value);
-                }
+                damageMultiplier = 0.9f;
                 break;
-                
             case CardType.Skill:
-                if (BattleManager.Instance.party.Count > characterIndex)
-                {
-                    BattleManager.Instance.party[characterIndex].GainBlock(value);
-                }
+                defenseMultiplier = 1.3f;
                 break;
-        }
-        
-        // 특수 효과
-        ApplySpecialEffect();
-        
-        BattleManager.Instance.CheckBattleEnd();
-        
-        // CardManager를 통해 카드 사용 처리
-        CardDisplay cardDisplay = GetComponent<CardDisplay>();
-        if (cardDisplay != null && CardManager.Instance != null)
-        {
-            CardManager.Instance.PlayCard(cardDisplay);
         }
     }
     
-    void ApplySpecialEffect()
+    public int CalculateDamage(CharacterData character)
     {
-        switch (specialEffect)
+        if (damageMultiplier > 0)
         {
-            case CardEffect.DrawCard:
-                // 카드 드로우
-                if (CardManager.Instance != null)
-                {
-                    CardManager.Instance.DrawCards(effectValue);
-                    Debug.Log($"{effectValue}장 드로우!");
-                }
-                break;
-                
-            case CardEffect.GainEnergy:
-                // 에너지 획득
-                if (BattleManager.Instance != null)
-                {
-                    BattleManager.Instance.currentEnergy += effectValue;
-                    BattleUI.Instance?.UpdateEnergyUI();
-                    Debug.Log($"에너지 +{effectValue}!");
-                }
-                break;
-                
-            case CardEffect.SelfDamage:
-                // 자신에게 데미지
-                if (BattleManager.Instance.party.Count > characterIndex)
-                {
-                    BattleManager.Instance.party[characterIndex].TakeDamage(effectValue);
-                    Debug.Log($"자신에게 {effectValue} 데미지!");
-                }
-                break;
-                
-            case CardEffect.Poison:
-                Debug.Log($"독 효과 (미구현): {effectValue}턴");
-                // TODO: 독 시스템 구현
-                break;
-                
-            case CardEffect.Weak:
-                Debug.Log($"약화 효과 (미구현)");
-                // TODO: 약화 시스템 구현
-                break;
-                
-            case CardEffect.Vulnerable:
-                Debug.Log($"취약 효과 (미구현)");
-                // TODO: 취약 시스템 구현
-                break;
-                
-            case CardEffect.Strength:
-                Debug.Log($"힘 효과 (미구현): +{effectValue}");
-                // TODO: 힘 시스템 구현
-                break;
+            return Mathf.RoundToInt(character.attackPower * damageMultiplier);
         }
+        return cardData?.value ?? 0;
+    }
+    
+    public int CalculateDefense(CharacterData character)
+    {
+        if (defenseMultiplier > 0)
+        {
+            return Mathf.RoundToInt(character.defensePower * defenseMultiplier);
+        }
+        return cardData?.value ?? 0;
+    }
+    
+    public virtual void PlayCard()
+    {
+        Debug.Log($"{cardName} 카드 사용! 코스트: {cost}");
     }
 }

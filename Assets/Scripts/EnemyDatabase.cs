@@ -23,36 +23,44 @@ public class EnemyDatabase : MonoBehaviour
     
     void InitializeEnemies()
     {
-        // 고블린 (약함)
-        EnemyData goblin = new EnemyData("고블린", 10, 5, 8);
-        goblin.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 6, "공격"));
-        goblin.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 7, "공격"));
-        goblin.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Defend, 5, "방어"));
-        enemies.Add("고블린", goblin);
+        // 약한 적
+        EnemyData weakEnemy = new EnemyData("슬라임", 150, 35, 45, 5);
+        weakEnemy.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 40, 15, "체당 공격"));
+        weakEnemy.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 35, 12, "약한 공격"));
+        weakEnemy.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Defend, 20, 0, "방어"));
+        enemies.Add("슬라임", weakEnemy);
         
-        // 오크 (중간)
-        EnemyData orc = new EnemyData("오크", 10, 8, 12);
-        orc.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 10, "강타"));
-        orc.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 8, "공격"));
-        orc.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Defend, 8, "방어"));
-        orc.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 12, "분노"));
-        enemies.Add("오크", orc);
+        // 중간 적
+        EnemyData mediumEnemy = new EnemyData("오크", 250, 55, 65, 10);
+        mediumEnemy.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 60, 25, "강타"));
+        mediumEnemy.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 55, 20, "일반 공격"));
+        mediumEnemy.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Defend, 30, 0, "방어 태세"));
+        mediumEnemy.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 70, 30, "분노의 일격"));
+        enemies.Add("오크", mediumEnemy);
         
-        // 트롤 (강함)
-        EnemyData troll = new EnemyData("트롤", 10, 10, 15);
-        troll.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 14, "내려치기"));
-        troll.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 12, "공격"));
-        troll.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Defend, 12, "재생"));
-        troll.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 16, "광폭화"));
-        enemies.Add("트롤", troll);
+        // 강한 적
+        EnemyData strongEnemy = new EnemyData("트롤", 350, 75, 85, 15);
+        strongEnemy.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 80, 35, "내려치기"));
+        strongEnemy.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 75, 30, "휘두르기"));
+        strongEnemy.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Defend, 40, 0, "재생"));
+        strongEnemy.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 90, 40, "광폭화"));
+        enemies.Add("트롤", strongEnemy);
         
-        // 보스 (매우 강함)
-        EnemyData boss = new EnemyData("드래곤", 120, 15, 20);
-        boss.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 18, "화염 브레스"));
-        boss.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 15, "발톱 공격"));
-        boss.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Defend, 15, "비늘 강화"));
-        boss.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 20, "꼬리 휩쓸기"));
-        boss.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 25, "분노의 포효"));
+        // 엘리트
+        EnemyData elite = new EnemyData("오우거", 500, 95, 105, 20);
+        elite.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 100, 40, "강력한 일격"));
+        elite.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 90, 35, "연속 공격"));
+        elite.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Defend, 50, 0, "철벽 방어"));
+        elite.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 110, 45, "필살기"));
+        enemies.Add("오우거", elite);
+        
+        // 보스
+        EnemyData boss = new EnemyData("드래곤", 800, 110, 130, 30);
+        boss.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 120, 50, "화염 브레스"));
+        boss.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 100, 40, "발톱 공격"));
+        boss.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Defend, 60, 0, "비늘 강화"));
+        boss.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 110, 45, "꼬리 휩쓸기"));
+        boss.actionPattern.Add(new EnemyAction(EnemyAction.ActionType.Attack, 140, 60, "분노의 포효"));
         enemies.Add("드래곤", boss);
         
         Debug.Log($"적 데이터베이스 초기화 완료! {enemies.Count}종");
@@ -66,12 +74,12 @@ public class EnemyDatabase : MonoBehaviour
         }
         
         Debug.LogWarning($"적 '{enemyName}'을 찾을 수 없습니다!");
-        return enemies["고블린"]; // 기본값
+        return enemies["슬라임"]; // 기본값
     }
     
     public EnemyData GetRandomEnemy()
     {
-        string[] enemyNames = { "고블린", "오크", "트롤" };
+        string[] enemyNames = { "슬라임", "오크", "트롤" };
         string randomName = enemyNames[Random.Range(0, enemyNames.Length)];
         return GetEnemy(randomName);
     }
