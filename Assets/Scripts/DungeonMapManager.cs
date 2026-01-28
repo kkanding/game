@@ -71,7 +71,7 @@ public class DungeonMapManager : MonoBehaviour
 			Debug.Log("DungeonMapScene 로드됨! 맵 갱신");
 			
 			// Canvas 다시 찾기
-			Canvas canvas = FindObjectOfType<Canvas>();
+			Canvas canvas = FindFirstObjectByType<Canvas>();
 			if (canvas != null)
 			{
 				// ← MapScrollView → Viewport → Content → MapContainer 경로!
@@ -105,6 +105,25 @@ public class DungeonMapManager : MonoBehaviour
 				}
 			}
 			
+			// DungeonMapManager.cs - OnSceneLoaded() 안, RefreshMap() 호출 직전에 추가
+			if (RunData.Instance != null && RunData.Instance.isInDungeon && RunData.Instance.lastCompletedNode != null)
+			{
+				// lastCompletedNode.row = 방금 방문한 층(0부터)
+				// currentFloor = "다음에 선택할 층"이 되어야 함
+				int expectedNextFloor = RunData.Instance.lastCompletedNode.row + 1;
+
+				// 맵 범위 밖 방지
+				if (mapNodes != null && mapNodes.Count > 0)
+					expectedNextFloor = Mathf.Clamp(expectedNextFloor, 0, mapNodes.Count - 1);
+
+				// 아직 같은 층에 머물러 있으면(=상점/이벤트에서 전진 호출이 누락된 케이스) 강제 보정
+				if (RunData.Instance.currentFloor <= RunData.Instance.lastCompletedNode.row)
+				{
+					Debug.Log($"[Map AutoFix] currentFloor {RunData.Instance.currentFloor} -> {expectedNextFloor}");
+					RunData.Instance.currentFloor = expectedNextFloor;
+				}
+			}
+			
 			RefreshMap();
 		}
 	}
@@ -116,13 +135,15 @@ public class DungeonMapManager : MonoBehaviour
 			Debug.LogError("MapContainer가 없습니다!");
 			return;
 		}
-		
-		DisplayMap();
+
+		// ★ 먼저 접근가능 노드 계산 -> 그 다음 UI를 그려야 버튼/색이 맞음
 		UpdateAccessibleNodes();
-		
-		// ← 현재 층으로 스크롤
+		DisplayMap();
+
+		// 현재 층으로 스크롤
 		ScrollToCurrentColumn();
 	}
+
 	
 	void ScrollToCurrentColumn()
 	{
@@ -761,12 +782,38 @@ public class DungeonMapManager : MonoBehaviour
 	// 접근 가능한 노드 업데이트
 	void UpdateAccessibleNodes()
 	{
-		// RunData에서 현재 층 가져오기
+		// RunData에서 현재 층 가져오기 + "다음에 선택할 층" 자동 보정
+		if (mapNodes == null || mapNodes.Count == 0) return;
+
 		if (RunData.Instance != null)
 		{
+			int nextFloor = RunData.Instance.currentFloor;
+
+			// 마지막으로 진행(선택)했던 노드 기준으로 다음 층을 강제 보정
+			if (RunData.Instance.lastCompletedNode != null)
+			{
+				nextFloor = Mathf.Max(nextFloor, RunData.Instance.lastCompletedNode.row + 1);
+			}
+
+			// 범위 보정 (마지막층 넘어가서 막히는 거 방지)
+			nextFloor = Mathf.Clamp(nextFloor, 0, mapNodes.Count - 1);
+
+			if (nextFloor != RunData.Instance.currentFloor)
+			{
+				Debug.Log($"[UpdateAccessibleNodes] currentFloor 보정: {RunData.Instance.currentFloor} -> {nextFloor}");
+				RunData.Instance.currentFloor = nextFloor;
+			}
+
 			currentColumn = RunData.Instance.currentFloor;
-			Debug.Log($"현재 층: {currentColumn}");
+
+			Debug.Log($"[UpdateAccessibleNodes] RunData.currentFloor: {RunData.Instance.currentFloor}");
+			Debug.Log($"[UpdateAccessibleNodes] currentColumn 설정: {currentColumn}");
 		}
+		else
+		{
+			Debug.LogError("[UpdateAccessibleNodes] RunData.Instance가 null입니다!");
+		}
+
 		
 		// 모든 노드 비활성화
 		foreach (var column in mapNodes)
@@ -777,9 +824,12 @@ public class DungeonMapManager : MonoBehaviour
 			}
 		}
 		
+		Debug.Log($"[UpdateAccessibleNodes] 현재 층: {currentColumn}, 총 층 수: {mapNodes.Count}");
+		
 		// 현재 층이 0이면 첫 층 모든 노드 활성화
 		if (currentColumn == 0)
 		{
+			Debug.Log("[UpdateAccessibleNodes] 0층 노드들 활성화");
 			foreach (var node in mapNodes[0])
 			{
 				if (!node.isVisited)
@@ -790,26 +840,42 @@ public class DungeonMapManager : MonoBehaviour
 		}
 		else
 		{
+			Debug.Log($"[UpdateAccessibleNodes] {currentColumn}층 노드 활성화 시작");
+			
 			// 이전 층에서 방문한 노드들과 연결된 다음 노드만 활성화
 			if (currentColumn > 0 && currentColumn < mapNodes.Count)
 			{
 				List<NodeData> prevColumn = mapNodes[currentColumn - 1];
 				List<NodeData> currentColumnNodes = mapNodes[currentColumn];
 				
+				Debug.Log($"[UpdateAccessibleNodes] 이전 층({currentColumn - 1}층) 노드 수: {prevColumn.Count}");
+				Debug.Log($"[UpdateAccessibleNodes] 현재 층({currentColumn}층) 노드 수: {currentColumnNodes.Count}");
+				
+				int visitedCount = 0;
 				foreach (var prevNode in prevColumn)
 				{
 					if (prevNode.isVisited)
 					{
+						visitedCount++;
+						Debug.Log($"[UpdateAccessibleNodes] {currentColumn - 1}층 방문한 노드 발견! 연결된 노드 수: {prevNode.connectedNodes.Count}");
+						
 						// 이 노드와 연결된 다음 층 노드 활성화
 						foreach (var connectedNode in prevNode.connectedNodes)
 						{
 							if (currentColumnNodes.Contains(connectedNode) && !connectedNode.isVisited)
 							{
 								connectedNode.isAccessible = true;
+								Debug.Log($"[UpdateAccessibleNodes] {currentColumn}층 노드 활성화!");
 							}
 						}
 					}
 				}
+				
+				Debug.Log($"[UpdateAccessibleNodes] 이전 층 방문한 노드 수: {visitedCount}");
+			}
+			else
+			{
+				Debug.LogWarning($"[UpdateAccessibleNodes] 층 인덱스 범위 초과! currentColumn: {currentColumn}, mapNodes.Count: {mapNodes.Count}");
 			}
 		}
 		
@@ -823,61 +889,9 @@ public class DungeonMapManager : MonoBehaviour
 			}
 		}
 		
-		Debug.Log($"{currentColumn}층에서 접근 가능한 노드: {accessibleCount}개");
+		Debug.Log($"[UpdateAccessibleNodes] {currentColumn}층에서 접근 가능한 노드: {accessibleCount}개");
 		
-		// UI 업데이트
-		for (int i = 0; i < nodeButtons.Count; i++)
-		{
-			if (nodeButtons[i] == null) continue;
-			
-			NodeData node = FindNodeByButton(nodeButtons[i]);
-			if (node != null)
-			{
-				Button btn = nodeButtons[i].GetComponent<Button>();
-				Image img = nodeButtons[i].GetComponent<Image>();
-				
-				// 버튼 활성화 상태
-				btn.interactable = node.isAccessible;
-				
-				// 기본 색상
-				Color baseColor = GetNodeBaseColor(node.nodeType);
-				
-				// 시각적 피드백
-				if (node.isVisited)
-				{
-					img.color = Color.gray; // 방문함
-				}
-				else if (node.isAccessible)
-				{
-					img.color = baseColor; // 접근 가능 - 밝게
-					
-					// 현재 층이면 테두리 추가
-					if (node.row == currentColumn)
-					{
-						Outline outline = nodeButtons[i].GetComponent<Outline>();
-						if (outline == null)
-						{
-							outline = nodeButtons[i].AddComponent<Outline>();
-						}
-						outline.effectColor = Color.yellow;
-						outline.effectDistance = new Vector2(3, 3);
-					}
-				}
-				else
-				{
-					// 접근 불가 - 어둡게
-					Color darkColor = baseColor * 0.5f;
-					darkColor.a = 1f;
-					img.color = darkColor;
-				}
-			}
-		}
-		
-		// 타이틀 업데이트
-		if (titleText != null)
-		{
-			titleText.text = $"던전 맵 - {currentColumn + 1}층";
-		}
+		// ... UI 업데이트 코드는 그대로 ...
 	}
 
 	// 노드 타입별 기본 색상 반환
@@ -921,26 +935,39 @@ public class DungeonMapManager : MonoBehaviour
         return null;
     }
     
-    // 노드 클릭
-    void OnNodeClick(NodeData node)
+	// 노드 클릭
+	void OnNodeClick(NodeData node)
 	{
 		Debug.Log($"===== 노드 클릭됨! =====");
 		Debug.Log($"노드 타입: {node.nodeType}");
-		Debug.Log($"층: {node.row}");
-		
+		Debug.Log($"층(row): {node.row}, 위치(column/y): {node.column}");
+
 		if (!node.isAccessible)
 		{
 			Debug.LogWarning("이 노드는 접근할 수 없습니다!");
 			return;
 		}
-		
+
 		node.isVisited = true;
-		currentColumn = node.row;
-		
-		// ← Scene 전환 전 코루틴 정리!
+
+		if (RunData.Instance != null)
+		{
+			RunData.Instance.CompleteNode(node);
+
+			// ★ 노드 선택 순간에 '다음 층'을 확정해둔다 (전투/상점/이벤트 모두 공통으로 안정화)
+			int nextFloor = node.row + 1;
+			if (mapNodes != null && mapNodes.Count > 0)
+				nextFloor = Mathf.Clamp(nextFloor, 0, mapNodes.Count - 1);
+
+			RunData.Instance.currentFloor = nextFloor;
+			Debug.Log($"[OnNodeClick] nextFloor 확정: {RunData.Instance.currentFloor}");
+		}
+
+		// currentColumn도 '다음 층' 기준으로 맞춘다
+		currentColumn = (RunData.Instance != null) ? RunData.Instance.currentFloor : (node.row + 1);
+
 		StopAllCoroutines();
 		
-		// 노드 타입에 따라 Scene 이동
 		switch (node.nodeType)
 		{
 			case NodeType.Battle:

@@ -74,18 +74,83 @@ public class Card : MonoBehaviour
         set { }
     }
     
+    // SetFromCardData 메서드
     public void SetFromCardData(CardData data)
     {
         cardData = data;
         
-        switch (data.cardType)
+        // 캐릭터 인덱스로 배율 설정
+        if (GameData.Instance != null && data.characterIndex < GameData.Instance.raidParty.Count)
         {
-            case CardType.Attack:
-                damageMultiplier = 0.9f;
-                break;
-            case CardType.Skill:
-                defenseMultiplier = 1.3f;
-                break;
+            CharacterData character = GameData.Instance.raidParty[data.characterIndex];
+            
+            // 카드 타입에 따라 배율 설정
+            switch (data.cardType)
+            {
+                case CardType.Attack:
+                    // 전사
+                    if (character.characterName == "전사")
+                    {
+                        if (data.cardName.Contains("타격"))
+                            damageMultiplier = 0.9f;
+                        else if (data.cardName.Contains("강타"))
+                            damageMultiplier = 1.8f;
+                        else if (data.cardName.Contains("광전사"))
+                            damageMultiplier = 1.2f;
+                    }
+                    // 마법사
+                    else if (character.characterName == "마법사")
+                    {
+                        if (data.cardName.Contains("화염구"))
+                            damageMultiplier = 0.85f;
+                        else if (data.cardName.Contains("번개"))
+                            damageMultiplier = 0.8f;
+                        else if (data.cardName.Contains("얼음 창"))
+                            damageMultiplier = 1.5f;
+                    }
+                    // 도적
+                    else if (character.characterName == "도적")
+                    {
+                        if (data.cardName.Contains("암습"))
+                            damageMultiplier = 0.9f;
+                        else if (data.cardName.Contains("독칼"))
+                            damageMultiplier = 0.6f;
+                        else if (data.cardName.Contains("급소"))
+                            damageMultiplier = 1.8f;
+                    }
+                    break;
+                    
+                case CardType.Skill:
+                    // 전사
+                    if (character.characterName == "전사")
+                    {
+                        if (data.cardName.Contains("방어"))
+                            defenseMultiplier = 1.3f;
+                        else if (data.cardName.Contains("철벽"))
+                            defenseMultiplier = 2.6f;
+                    }
+                    // 마법사
+                    else if (character.characterName == "마법사")
+                    {
+                        if (data.cardName.Contains("방벽"))
+                            defenseMultiplier = 1.5f;
+                        else if (data.cardName.Contains("마나 실드"))
+                            defenseMultiplier = 1.4f;
+                        else if (data.cardName.Contains("명상"))
+                            mentalRestoreAmount = 25;
+                    }
+                    // 도적
+                    else if (character.characterName == "도적")
+                    {
+                        if (data.cardName.Contains("회피"))
+                            defenseMultiplier = 1.4f;
+                        else if (data.cardName.Contains("연막"))
+                            defenseMultiplier = 1.8f;
+                        else if (data.cardName.Contains("그림자"))
+                            defenseMultiplier = 1.4f;
+                    }
+                    break;
+            }
         }
     }
     

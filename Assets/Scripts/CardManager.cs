@@ -60,13 +60,20 @@ public class CardManager : MonoBehaviour
 			Debug.Log($"캐릭터 {charData.characterName} 덱 로드:");
 			Debug.Log($"  카드 목록: {string.Join(", ", charData.cardList)}");
 			
+			// 쓰러진 캐릭이면(정신력 0 포함) 카드 전부 정신집중으로 유지
+			bool isDown = charData.isDefeated || charData.currentMentalPower <= 0;
+
 			foreach (string cardName in charData.cardList)
 			{
-				CardData cardData = CreateCardData(cardName, i);
+				CardData cardData = isDown ? CreateReviveCard(i) : CreateCardData(cardName, i);
 				if (cardData != null)
 				{
 					deck.Add(cardData);
-					Debug.Log($"  - {cardName} 추가");
+
+					// 디버그 로그(원하면 지워)
+					Debug.Log(isDown
+						? $"  - 정신집중 추가(Down)"
+						: $"  - {cardName} 추가");
 				}
 			}
 		}
@@ -77,121 +84,130 @@ public class CardManager : MonoBehaviour
     
     // 카드 데이터 생성
     CardData CreateCardData(string cardName, int characterIndex)
-	{
-		CardData card;
-		
-		// 업그레이드 확인
-		bool isUpgraded = cardName.EndsWith("+");
-		string baseName = cardName.Replace("+", "");
-		
-		switch (baseName)
-		{
-			// ===== 전사 카드 =====
-			case "타격":
-				card = new CardData("타격", CardType.Attack, 1, 6, "적에게 6의 피해를 준다.", characterIndex);
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			case "방어":
-				card = new CardData("방어", CardType.Skill, 1, 5, "5의 방어도를 얻는다.", characterIndex);
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			case "강타":
-				card = new CardData("강타", CardType.Attack, 2, 12, "적에게 12의 피해를 준다.", characterIndex);
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-				
-			case "철벽":
-				card = new CardData("철벽", CardType.Skill, 1, 8, "8의 방어도를 얻는다.", characterIndex);
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			case "분노":
-				card = new CardData("분노", CardType.Power, 0, 3, "다음 공격 +3 (미구현)", characterIndex);
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			case "광전사":
-				card = new CardData("광전사", CardType.Attack, 1, 8, "적에게 8의 피해. 자신도 2 피해.", characterIndex);
-				card.specialEffect = CardEffect.SelfDamage;
-				card.effectValue = 2;
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			// ===== 마법사 카드 =====
-			case "화염구":
-				card = new CardData("화염구", CardType.Attack, 2, 10, "적에게 10의 피해를 준다.", characterIndex);
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			case "방어막":
-				card = new CardData("방어막", CardType.Skill, 1, 8, "8의 방어도를 얻는다.", characterIndex);
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			case "번개":
-				card = new CardData("번개", CardType.Attack, 1, 7, "적에게 7의 피해를 준다.", characterIndex);
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			case "얼음 창":
-				card = new CardData("얼음 창", CardType.Attack, 2, 10, "적에게 10의 피해. 약화 (미구현)", characterIndex);
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			case "마나 실드":
-				card = new CardData("마나 실드", CardType.Skill, 1, 5, "5의 방어도. 카드 1장 드로우.", characterIndex);
-				card.specialEffect = CardEffect.DrawCard;
-				card.effectValue = 1;
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			case "집중":
-				card = new CardData("집중", CardType.Skill, 0, 0, "에너지 +1", characterIndex);
-				card.specialEffect = CardEffect.GainEnergy;
-				card.effectValue = 1;
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			// ===== 도적 카드 =====
-			case "암습":
-				card = new CardData("암습", CardType.Attack, 1, 8, "적에게 8의 피해를 준다.", characterIndex);
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			case "회피":
-				card = new CardData("회피", CardType.Skill, 1, 6, "6의 방어도를 얻는다.", characterIndex);
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			case "독칼":
-				card = new CardData("독칼", CardType.Attack, 1, 4, "적에게 4의 피해. 독 3턴 (미구현)", characterIndex);
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			case "연막탄":
-				card = new CardData("연막탄", CardType.Skill, 1, 10, "10의 방어도를 얻는다.", characterIndex);
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			case "그림자 숨기":
-				card = new CardData("그림자 숨기", CardType.Skill, 1, 6, "6의 방어도. 카드 1장 드로우.", characterIndex);
-				card.specialEffect = CardEffect.DrawCard;
-				card.effectValue = 1;
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			case "급소 찌르기":
-				card = new CardData("급소 찌르기", CardType.Attack, 2, 14, "적에게 14의 피해를 준다.", characterIndex);
-				if (isUpgraded) card = card.Upgrade();
-				return card;
-			
-			default:
-				Debug.LogWarning($"알 수 없는 카드: {cardName}");
-				return null;
-		}
-	}
+    {
+        CardData card;
+        
+        // 업그레이드 확인
+        bool isUpgraded = cardName.EndsWith("+");
+        string baseName = cardName.Replace("+", "");
+        
+        switch (baseName)
+        {
+            // ===== 전사 카드 (ATK 100, DEF 50) =====
+            case "타격":
+                card = new CardData("타격", CardType.Attack, 1, 90, "공격력의 90% 피해", characterIndex);
+                // ← 배율 설정은 Card 컴포넌트에서 하므로 여기선 계산된 값만 표시
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            case "방어":
+                card = new CardData("방어", CardType.Skill, 1, 65, "방어력의 130% 방어도", characterIndex);
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            case "강타":
+                card = new CardData("강타", CardType.Attack, 2, 180, "공격력의 180% 피해", characterIndex);
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+                
+            case "철벽":
+                card = new CardData("철벽", CardType.Skill, 2, 130, "방어력의 260% 방어도", characterIndex);
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            case "분노":
+                card = new CardData("분노", CardType.Power, 0, 3, "다음 공격 +3 (미구현)", characterIndex);
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            case "광전사":
+                card = new CardData("광전사", CardType.Attack, 1, 120, "공격력의 120% 피해. 자신도 2 피해", characterIndex);
+                card.specialEffect = CardEffect.SelfDamage;
+                card.effectValue = 2;
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            // ===== 마법사 카드 (ATK 130, DEF 30) =====
+            case "화염구":
+                card = new CardData("화염구", CardType.Attack, 1, 110, "공격력의 85% 피해", characterIndex);
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            case "방어막":
+            case "마법 방벽":
+                card = new CardData("마법 방벽", CardType.Skill, 1, 45, "방어력의 150% 방어도", characterIndex);
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            case "번개":
+                card = new CardData("번개", CardType.Attack, 1, 104, "공격력의 80% 피해", characterIndex);
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            case "얼음 창":
+                card = new CardData("얼음 창", CardType.Attack, 2, 195, "공격력의 150% 피해. 약화 (미구현)", characterIndex);
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            case "마나 실드":
+                card = new CardData("마나 실드", CardType.Skill, 1, 42, "방어력의 140% 방어도. 카드 1장 드로우", characterIndex);
+                card.specialEffect = CardEffect.DrawCard;
+                card.effectValue = 1;
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            case "집중":
+            case "명상":
+                card = new CardData("명상", CardType.Skill, 1, 25, "정신력 25 회복", characterIndex);
+                card.specialEffect = CardEffect.GainEnergy; // ← 나중에 정신력 회복 전용 이펙트로 변경
+                card.effectValue = 25;
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            // ===== 도적 카드 (ATK 120, DEF 30) =====
+            case "암습":
+                card = new CardData("암습", CardType.Attack, 1, 108, "공격력의 90% 피해", characterIndex);
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            case "회피":
+                card = new CardData("회피", CardType.Skill, 1, 42, "방어력의 140% 방어도", characterIndex);
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            case "독칼":
+                card = new CardData("독칼", CardType.Attack, 1, 72, "공격력의 60% 피해. 독 3턴 (미구현)", characterIndex);
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            case "연막탄":
+                card = new CardData("연막탄", CardType.Skill, 1, 54, "방어력의 180% 방어도", characterIndex);
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            case "그림자 숨기":
+                card = new CardData("그림자 숨기", CardType.Skill, 1, 42, "방어력의 140% 방어도. 카드 1장 드로우", characterIndex);
+                card.specialEffect = CardEffect.DrawCard;
+                card.effectValue = 1;
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            case "급소 찌르기":
+                card = new CardData("급소 찌르기", CardType.Attack, 2, 216, "공격력의 180% 피해", characterIndex);
+                if (isUpgraded) card = card.Upgrade();
+                return card;
+            
+            // ===== 정신집중 카드 (부활용) =====
+            case "정신집중":
+                card = new CardData("정신집중", CardType.Skill, 0, 0, "정신을 집중한다...", characterIndex);
+                card.specialEffect = CardEffect.None;
+                return card;
+            
+            default:
+                Debug.LogWarning($"알 수 없는 카드: {cardName}");
+                return null;
+        }
+    }
     
     // 덱 셔플
     void ShuffleDeck()
@@ -565,4 +581,132 @@ public class CardManager : MonoBehaviour
 		character.cardList.Remove(cardName);
 		Debug.Log($"{cardName} 제거!");
 	}
+	
+	// ======= 정신집중 & 부활 시스템 =======
+    
+    // 캐릭터의 카드를 정신집중으로 변경
+    public void ConvertCharacterCardsToRevive(CharacterData character)
+    {
+        if (character == null || GameData.Instance == null) return;
+        
+        // ← characterIndex 찾기
+        int charIndex = GameData.Instance.raidParty.IndexOf(character);
+        if (charIndex < 0) return;
+        
+        Debug.Log($"===== {character.characterName}의 카드를 정신집중으로 변경! (Index: {charIndex}) =====");
+        
+        // 덱에서 변경
+        for (int i = 0; i < deck.Count; i++)
+        {
+            if (deck[i].characterIndex == charIndex)
+            {
+                deck[i] = CreateReviveCard(charIndex);
+            }
+        }
+        
+        // 손패에서 변경
+        for (int i = 0; i < hand.Count; i++)
+        {
+            if (hand[i].characterIndex == charIndex)
+            {
+                hand[i] = CreateReviveCard(charIndex);
+            }
+        }
+        
+        // 버리기 더미에서 변경
+        for (int i = 0; i < discardPile.Count; i++)
+        {
+            if (discardPile[i].characterIndex == charIndex)
+            {
+                discardPile[i] = CreateReviveCard(charIndex);
+            }
+        }
+        
+        // 손패 UI 업데이트
+        UpdateHandUI();
+        
+        Debug.Log($"변환 완료! 덱: {deck.Count}, 손패: {hand.Count}, 버리기: {discardPile.Count}");
+    }
+    
+    // 정신집중 카드 생성
+    CardData CreateReviveCard(int characterIndex)
+    {
+        CardData reviveCard = new CardData("정신집중", CardType.Skill, 0, 0, "정신을 집중한다...", characterIndex);
+        reviveCard.specialEffect = CardEffect.None;
+        return reviveCard;
+    }
+    
+    // 캐릭터 카드 복구 (부활 시)
+    public void RestoreCharacterCards(CharacterData character)
+    {
+        if (character == null || GameData.Instance == null) return;
+        
+        // ← characterIndex 찾기
+        int charIndex = GameData.Instance.raidParty.IndexOf(character);
+        if (charIndex < 0) return;
+        
+        Debug.Log($"===== {character.characterName}의 카드 복구! (Index: {charIndex}) =====");
+        
+        List<string> originalCards = character.cardList;
+        
+        // 덱에서 복구
+        for (int i = 0; i < deck.Count; i++)
+        {
+            if (deck[i].characterIndex == charIndex && deck[i].cardName == "정신집중")
+            {
+                string cardName = originalCards[Random.Range(0, originalCards.Count)];
+                deck[i] = CreateCardData(cardName, charIndex);
+            }
+        }
+        
+        // 손패에서 복구
+        for (int i = 0; i < hand.Count; i++)
+        {
+            if (hand[i].characterIndex == charIndex && hand[i].cardName == "정신집중")
+            {
+                string cardName = originalCards[Random.Range(0, originalCards.Count)];
+                hand[i] = CreateCardData(cardName, charIndex);
+            }
+        }
+        
+        // 버리기 더미에서 복구
+        for (int i = 0; i < discardPile.Count; i++)
+        {
+            if (discardPile[i].characterIndex == charIndex && discardPile[i].cardName == "정신집중")
+            {
+                string cardName = originalCards[Random.Range(0, originalCards.Count)];
+                discardPile[i] = CreateCardData(cardName, charIndex);
+            }
+        }
+        
+        // 손패 UI 업데이트
+        UpdateHandUI();
+        
+        Debug.Log("카드 복구 완료!");
+    }
+    
+    // 손패 UI 업데이트
+    void UpdateHandUI()
+    {
+        // 기존 손패 UI 전부 제거
+        foreach (var cardUI in handUI)
+        {
+            if (cardUI != null)
+                Destroy(cardUI.gameObject);
+        }
+        handUI.Clear();
+        
+        // 새로 생성
+        foreach (var cardData in hand)
+        {
+            CardDisplay cardDisplay = Instantiate(cardDisplayPrefab, handTransform);
+            Card cardComponent = cardDisplay.gameObject.AddComponent<Card>();
+            cardComponent.SetFromCardData(cardData);
+            cardDisplay.SetupCard(cardComponent);
+            handUI.Add(cardDisplay);
+        }
+        
+        // 레이아웃 재정렬
+        StartCoroutine(DelayedReorganize());
+    }
 }

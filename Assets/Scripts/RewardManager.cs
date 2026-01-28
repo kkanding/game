@@ -328,7 +328,8 @@ public class RewardManager : MonoBehaviour
 		if (RunData.Instance != null && RunData.Instance.isInDungeon)
 		{
 			Debug.Log("맵으로 복귀!");
-			// AdvanceFloor는 BattleManager에서 이미 호출됨!
+			// 전투 보상 화면이므로, 여기서 다음 층으로 진행
+			RunData.Instance.AdvanceFloor();
 			SceneManager.LoadScene("DungeonMapScene");
 		}
 		else

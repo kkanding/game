@@ -17,8 +17,10 @@ public enum NodeType
 public class NodeData
 {
     public NodeType nodeType;
-    public int row;           // 층 (세로)
-    public int column;        // 가로 위치
+    // row: 층(가로 진행, 0층 -> 1층 -> ...)
+    // column: 같은 층 내 세로 위치(0,1,2...)
+    public int row;
+    public int column;
     public Vector2 position;  // UI 위치
     public List<NodeData> connectedNodes = new List<NodeData>(); // 연결된 다음 노드들
     public bool isVisited = false;

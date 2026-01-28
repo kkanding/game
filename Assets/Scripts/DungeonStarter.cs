@@ -12,9 +12,9 @@ public class DungeonStarter : MonoBehaviour
         }
         
         // 던전 시작
-        if (RunData.Instance != null)
-        {
-            RunData.Instance.StartDungeon();
-        }
+		if (RunData.Instance != null && !RunData.Instance.isInDungeon)
+		{
+			RunData.Instance.StartDungeon();
+		}
     }
 }

@@ -19,6 +19,7 @@ public class ShopManager : MonoBehaviour
     public int cardPrice = 50;
     public int removeCardPrice = 75;
     public int healPrice = 40;
+	public int relicPrice = 120;
     
     void Awake()
     {
@@ -65,8 +66,11 @@ public class ShopManager : MonoBehaviour
         
         // 2. 카드 제거
         CreateRemoveCardItem();
+		
+		// 3. 유물 구매 (추가)
+		CreateRelicItem();
         
-        // 3. 체력 회복
+        // 4. 체력 회복
         CreateHealItem();
     }
     
@@ -158,6 +162,55 @@ public class ShopManager : MonoBehaviour
             if (buyButton != null) buyButton.interactable = false;
         }
     }
+	
+	// ===== 유물 구매 아이템 =====
+	void CreateRelicItem()
+	{
+		// RelicManager 없으면 상점에 유물 안 뜸 (안전장치)
+		if (RelicManager.Instance == null) return;
+
+		RelicDefinition relic = RelicManager.Instance.GetRandomRelicNotOwned();
+		if (relic == null) return; // 전부 보유하면 안 뜸
+
+		GameObject itemObj = Instantiate(shopItemPrefab, shopItemsPanel);
+
+		// UI 설정 (기존 카드/회복 아이템과 동일한 프리팹 구조 사용)
+		TextMeshProUGUI nameText = itemObj.transform.Find("ItemNameText")?.GetComponent<TextMeshProUGUI>();
+		TextMeshProUGUI descText = itemObj.transform.Find("DescriptionText")?.GetComponent<TextMeshProUGUI>();
+		Button buyButton = itemObj.transform.Find("BuyButton")?.GetComponent<Button>();
+		TextMeshProUGUI buttonText = buyButton != null ? buyButton.GetComponentInChildren<TextMeshProUGUI>() : null;
+
+		if (nameText != null) nameText.text = $"유물: {relic.name}";
+		if (descText != null) descText.text = relic.desc;
+		if (buttonText != null) buttonText.text = $"구매 ({relicPrice} 골드)";
+
+		if (buyButton != null)
+		{
+			buyButton.onClick.AddListener(() => BuyRelic(relic.id, buyButton));
+		}
+
+		// 골드 부족하면 비활성
+		if (GameData.Instance != null && GameData.Instance.gold < relicPrice)
+		{
+			if (buyButton != null) buyButton.interactable = false;
+		}
+	}
+
+	void BuyRelic(string relicId, Button buyButton)
+	{
+		if (GameData.Instance == null || RelicManager.Instance == null) return;
+		if (GameData.Instance.gold < relicPrice) return;
+
+		bool added = RelicManager.Instance.AddRelic(relicId);
+		if (!added) return;
+
+		GameData.Instance.gold -= relicPrice;
+
+		UpdateGoldUI();
+
+		if (buyButton != null) buyButton.interactable = false;
+	}
+
     
     // 랜덤 카드 선택
     CardData GetRandomCardForSale()

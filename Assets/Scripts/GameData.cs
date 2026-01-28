@@ -21,6 +21,7 @@ public class CharacterData
     
     public Sprite characterImage;
     public List<string> cardList;
+	
     
     public CharacterData(string name, string charClass, int hp, int atk, int def, int mp)
     {
@@ -94,6 +95,11 @@ public class GameData : MonoBehaviour
     
     private bool isInitialized = false;
     public int gold = 100;
+	
+	
+	[Header("Shared Party HP")]
+	public int partyMaxHealth;
+	public int partyCurrentHealth;
     
     void Awake()
     {
@@ -184,6 +190,10 @@ public class GameData : MonoBehaviour
     {
         currentDungeonSeed = Random.Range(0, 999999999);
         isInDungeon = true;
+		
+		// ✅ 던전 시작 시 공유 HP 초기화(풀피)
+		partyMaxHealth = GetTotalPartyHealth();
+		partyCurrentHealth = partyMaxHealth;
         
         // 던전 시작 시 모든 캐릭터 상태 초기화
         foreach (var character in raidParty)
